@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cygnus-postgresql
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cygnus-postgresql
+  template:
+    metadata:
+      labels:
+        app: cygnus-postgresql
+    spec:
+      containers:
+      - name: cygnus-postgresql
+        image: fiware/cygnus-ngsi:2.1.0
+        ports:
+        - containerPort: 5055
+          name: service
+        - containerPort: 5080
+          name: api
+        livenessProbe:
+          tcpSocket:
+            port: 5080
+          failureThreshold: 12
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 5080
+          failureThreshold: 12
+          periodSeconds: 10
+        env:
+        - name: CYGNUS_SERVICE_PORT
+          value: "5055"
+        - name: CYGNUS_API_PORT
+          value: "5080"
+        - name: CYGNUS_LOG_LEVEL
+          value: "INFO"
+        - name: CYGNUS_POSTGRESQL_HOST
+          value: "${PG_HOST}"
+        - name: CYGNUS_POSTGRESQL_PORT
+          value: "5432"
+        - name: CYGNUS_POSTGRESQL_USER
+          value: "${PG_ADMIN}@${PG}"
+        - name: CYGNUS_POSTGRESQL_PASS
+          valueFrom:
+            secretKeyRef:
+              name: postgresql-credential
+              key: password
+        - name: CYGNUS_POSTGRESQL_DATABASE
+          value: "${PG_DATABASE}"
+        - name: CYGNUS_POSTGRESQL_OPTIONS
+          value: "sslmode=require"
+        - name: CYGNUS_POSTGRESQL_ATTR_PERSISTENCE
+          value: "column"
+        - name: CYGNUS_POSTGRESQL_ATTR_NATIVE_TYPES
+          value: "true"
+        - name: CYGNUS_POSTGRESQL_DATA_MODEL
+          value: "dm-by-service-path"

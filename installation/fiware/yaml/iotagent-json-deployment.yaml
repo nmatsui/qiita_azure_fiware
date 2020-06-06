@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iotagent-json
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: iotagent-json
+  template:
+    metadata:
+      labels:
+        app: iotagent-json
+    spec:
+      containers:
+      - name: iotagent-json
+        image: fiware/iotagent-json:1.14.0
+        ports:
+        - containerPort: 4041
+          name: manage
+        - containerPort: 7896
+          name: http
+        livenessProbe:
+          tcpSocket:
+            port: 4041
+          failureThreshold: 12
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 4041
+          failureThreshold: 12
+          periodSeconds: 10
+        env:
+        - name: IOTA_CB_HOST
+          value: "orion"
+        - name: IOTA_CB_PORT
+          value: "1026"
+        - name: IOTA_CB_NGSI_VERSION
+          value: "v2"
+        - name: IOTA_AUTOCAST
+          value: "true"
+        - name: IOTA_TIMESTAMP
+          value: "true"
+        - name: IOTA_REGISTRY_TYPE
+          value: "mongodb"
+        - name: IOTA_MONGO_HOST
+          value: "mongodb-0.mongodb, mongodb-1.mongodb, mongodb-2.mongodb"
+        - name: IOTA_MONGO_PORT
+          value: "27017"
+        - name: IOTA_MONGO_DB
+          value: "iotagentjson"
+        - name: IOTA_MONGO_REPLICASET
+          value: "rs0"
+        - name: IOTA_NORTH_PORT
+          value: "4041"
+        - name: IOTA_HTTP_PORT
+          value: "7896"
+        - name: IOTA_PROVIDER_URL
+          value: "http://iotagent-json:4041"
+        - name: IOTA_LOG_LEVEL
+          value: "DEBUG"
+      - name: amqp10-converter
+        image: roboticbase/amqp10-converter:0.1.0
+        imagePullPolicy: Always
+        env:
+        - name: AMQP_HOST
+          value: "${SERVICEBUS}.servicebus.windows.net"
+        - name: AMQP_PORT
+          value: "5671"
+        - name: AMQP_USE_TLS
+          value: "true"
+        - name: AMQP_USERNAME
+          value: "service"
+        - name: AMQP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: servicebus-credentials
+              key: primaryKey
+        - name: IOTA_HOST
+          value: "iotagent-json"
+        - name: IOTA_MANAGE_PORT
+          value: "4041"
+        - name: IOTA_DATA_PORT
+          value: "7896"
+        - name: IOTA_CB_HOST
+          value: "orion"
+        - name: IOTA_CB_PORT
+          value: "1026"
+        - name: IOTA_CB_NGSI_VERSION
+          value: "v2"
+        - name: FIWARE_SERVICE
+          value: "${FIWARE_SERVICE}"
+        - name: FIWARE_SERVICEPATH
+          value: "${FIWARE_SERVICEPATH}"
+        - name: ENTITIES
+          value: '${ENTITIES}'
+        - name: LOG_LEVEL
+          value: "DEBUG"

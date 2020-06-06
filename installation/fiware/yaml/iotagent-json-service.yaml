@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotagent-json
+  labels:
+    app: iotagent-json
+spec:
+  type: ClusterIP
+  selector:
+    app: iotagent-json
+  ports:
+  - port: 4041
+    targetPort: manage
+    name: iotagent-json-manage-binding
+  - port: 7896
+    targetPort: http
+    name: iotagent-json-http-binding
